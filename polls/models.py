@@ -6,7 +6,7 @@ class Company(models.Model):
     businessStructure = models.JSONField(default=dict)
     address = models.JSONField(default=dict)
     cellphone = models.TextField()
-    creationDate = models.DateTimeField('date published')
+    creationDate = models.DateTimeField()
     active = models.BooleanField()
 
 class Order(models.Model):
