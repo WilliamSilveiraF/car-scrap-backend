@@ -12,7 +12,7 @@
                 padding-top: 5px;
                 font-weight: bold;
             }
-            
+
         </style>
     </head>
     <body>
@@ -41,10 +41,10 @@
             <tr style="height: 35px;">
                 <td style="width: auto;"></td>
                 <td class='tagTable' style="background-color: white;">
-                    123456
+                    {{orderID}}
                 </td>
                 <td class='tagTable' style="background-color: white;">
-                    12/1/2000
+                    {{issueDate}}
                 </td>
             </tr>
         </table>
@@ -55,11 +55,11 @@
             </tr>
             <tr style="border: 1px solid; height: 150px;">
                 <td>
-                    Nome </br>
-                    Company Name</br>
-                    2554 Turnpike Drive</br>
-                    Birmingham, AL 35203</br>
-                    256-369-8939
+                    {{ employee }}</br>
+                    {{ costumer.name }} {{ costumer.structure }}</br>
+                    {{ costumer.address.street }}</br>
+                    {{ costumer.address.city }}, {{ costumer.address.state }} {{ costumer.address.zip }}</br>
+                    {{ costumerCELLPHONE }}
                 </td>
                 <td style="width: auto;"></td>
             </tr>
@@ -70,12 +70,20 @@
                 <td class='tagTable' style="width: 25%;">VALUE</td>
             </tr>
             <tr style="border: 1px solid; height: 250px;">
-                <td class='tagTable' style='background-color: white;'></td>
-                <td class='tagTable' style='background-color: white;'></td>
+                <td class='tagTable' style='background-color: white; text-align: left; text-align: start; padding: 5px;'>
+                    Base Fee</br>
+                    {{ product.name }}</br>
+                    Tax {{ product.formatedTax }}
+                </td>
+                <td class='tagTable' style='background-color: white; text-align: right; padding: 5px; font-weight: normal;'>
+                    $ 500.00</br>
+                    {{ product.totalLiquid }}</br>
+                    {{ product.liquidTax }}
+                </td>
             </tr>
             <tr style="height: 35px;">
                 <td></td>
-                <td class='tagTable' style='text-align: right; padding: 2px;'>TOTAL $ 201.11</td>
+                <td class='tagTable' style='padding: 2px; text-align: right;'>TOTAL {{ product.totalAfterTax }}</td>
             </tr>
         </table>
         <table style="width: 100%; margin-top: 48px; text-align: center;">
@@ -86,6 +94,5 @@
             </tr>
         </table>
         <p style="margin-top: 10rem; text-align: center; font-size: 1rem;">© 2022 Will Company</p>
-        
     </body>
 </html>
