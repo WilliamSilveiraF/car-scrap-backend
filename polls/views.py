@@ -1,36 +1,21 @@
 from . import serializers, models, utils
 from rest_framework.response import Response
 from rest_framework import views
-from django.utils import timezone
 import base64
 from io import BytesIO
-import json
 
-class InvoiceContext:
-    def __init__(self, companyID, product, productAmount, employee):
-        baseFEE = 500.0
-        liquidTAX = ((productAmount * product.get('price') + baseFEE)  * product.get('tax'))
-        totalPRODUCT = (product.get('price') * productAmount)
-        product['formatedTax'] = f"{product.get('tax') * 100:.2f}%"
-        product['liquidTax'] = f"$ {liquidTAX:.2f}"
-        product['totalLiquid'] = f"$ {totalPRODUCT:.2f}"
-        product['totalAfterTax'] = f"$ {(totalPRODUCT + liquidTAX + baseFEE):.2f}"
+from rest_framework_simplejwt.views import TokenObtainPairView
 
-        self.product = product
-        self.productAmount = productAmount
-        self.costumer = self.getCompany(companyID)
-        self.total = totalPRODUCT + liquidTAX + baseFEE
-        self.issueDate = timezone.now()
-        self.costumerCELLPHONE = f"{self.costumer.cellphone[0:3]}-{self.costumer.cellphone[3:6]}-{self.costumer.cellphone[6:]}"
-        self.employee = employee
-        self.orderID = models.Order.objects.latest('id').id + 1
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = serializers.MyTokenObtainPairSerializer
 
-    def getCompany(self, companyID):
-        try: 
-            company = models.Company.objects.get(id=companyID)
-            return company
-        except models.Company.DoesNotExist:
-            return 'error'
+class GetRoutesView(views.APIView):
+    def get(self, request):
+        routes = [
+            '/token',
+            '/token/refresh'
+        ]
+        return Response(routes, status=200)
 
 class InvoiceView(views.APIView):
     def post(self, request):
@@ -42,7 +27,7 @@ class InvoiceView(views.APIView):
         if not employee or not companyID or not product or not productAmount:
             return Response({'error': 'Review the request body'}, status=412)
         
-        invoice = vars(InvoiceContext(**request.data))
+        invoice = vars(utils.InvoiceContext(**request.data))
         invoicePDF = utils.render_to_pdf('invoice.html', invoice)
         binaryInvoice = BytesIO(invoicePDF.content)
         base64Invoice = f"data:application/pdf;base64,{base64.b64encode(binaryInvoice.getvalue()).decode('utf-8')}"
