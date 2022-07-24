@@ -12,8 +12,8 @@ class MyTokenObtainPairView(TokenObtainPairView):
 class GetRoutesView(views.APIView):
     def get(self, request):
         routes = [
-            '/token',
-            '/token/refresh'
+            'auth/token',
+            'auth/token/refresh'
         ]
         return Response(routes, status=200)
 
