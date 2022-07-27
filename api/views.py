@@ -1,3 +1,6 @@
+from django.contrib.auth.models import User
+from django.utils import timezone
+
 from . import serializers, models, utils
 from rest_framework.response import Response
 from rest_framework import views
@@ -44,3 +47,40 @@ class InvoiceView(views.APIView):
 
     def __str__(self):
         return self.id
+
+class NewUserView(views.APIView):
+    def post(self, request):
+        user = request.data.pop('user')
+        company = request.data.pop('company')
+        try:
+            user = self.createUser(user)
+            company = self.createCompany(company, user)
+
+            return Response({'company': serializers.CompanySerializer(company).data}, status=200)
+        except Exception as error:
+            return Response({'error': str(error)}, status=400)
+        
+
+    @classmethod
+    def createUser(cls, user):
+        try:
+            password = user.pop('password')
+            user = User.objects.create(**user)
+            user.set_password(password)
+            user.save()
+            return user
+        except Exception as err:
+            raise Exception(f"Failed to create user: {str(err)}")
+
+    @classmethod
+    def createCompany(cls, company, user):
+        try:
+            company['creationDate'] = timezone.now()
+            
+            newCompany = models.Company.objects.create(**company)
+            newCompany.user = user
+            newCompany.save()
+            return newCompany
+
+        except Exception as err:
+            raise Exception(f"Failed to create company: {str(err)}")
