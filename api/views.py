@@ -22,15 +22,16 @@ class GetRoutesView(views.APIView):
 
 class InvoiceView(views.APIView):
     def post(self, request):
-        employee = request.data.get('employee', False)
-        companyID = request.data.get('companyID', False)
+        userID = request.data.get('userID', False)
         product = request.data.get('product', False)
         productAmount = request.data.get('productAmount', False)
         
-        if not employee or not companyID or not product or not productAmount:
+        if not userID or not product or not productAmount:
             return Response({'error': 'Review the request body'}, status=412)
-        
-        invoice = vars(utils.InvoiceContext(**request.data))
+
+        company = self.getCompanyByUserID(userID)
+
+        invoice = vars(utils.InvoiceContext(company, product, productAmount, userID))
         invoicePDF = utils.render_to_pdf('invoice.html', invoice)
         binaryInvoice = BytesIO(invoicePDF.content)
         base64Invoice = f"data:application/pdf;base64,{base64.b64encode(binaryInvoice.getvalue()).decode('utf-8')}"
@@ -40,13 +41,24 @@ class InvoiceView(views.APIView):
         invoice.pop('orderID')
         try:
             newOrder = models.Order.objects.create(**invoice, base64=base64Invoice)
-            return Response(serializers.OrderSerializer(newOrder).data, status=201)
+            newOrder.save()
+
+            return Response({'base64': newOrder.base64}, status=201)
         except Exception as error:
             print(error)
             return Response(error, status=412)
 
     def __str__(self):
         return self.id
+
+    @classmethod
+    def getCompanyByUserID(cls, userID):
+        try:
+            company = models.Company.objects.get(user__id=userID)
+            return company
+        except models.Company.DoesNotExist or Exception as err:
+            raise Exception(f"Failed to get company: {str(err)}")
+
 
 class NewUserView(views.APIView):
     def post(self, request):
@@ -58,6 +70,7 @@ class NewUserView(views.APIView):
 
             return Response({'company': serializers.CompanySerializer(company).data}, status=200)
         except Exception as error:
+            print(error)
             return Response({'error': str(error)}, status=400)
         
 
