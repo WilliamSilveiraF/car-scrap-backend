@@ -20,7 +20,10 @@ def render_to_pdf(template_src, context_dict={}):
 class InvoiceContext:
     def __init__(self, company, product, productAmount, userID):
         baseFEE = 500.0
-        liquidTAX = ((productAmount * product.get('price') + baseFEE)  * product.get('tax'))
+        price = float(product.get('price'))
+        productAmount = float(productAmount)
+
+        liquidTAX = ((productAmount * price + baseFEE)  * product.get('tax'))
         totalPRODUCT = (product.get('price') * productAmount)
         product['formatedTax'] = f"{product.get('tax') * 100:.2f}%"
         product['liquidTax'] = f"$ {liquidTAX:.2f}"
