@@ -1,9 +1,12 @@
 from django.http import HttpResponse
 from django.template.loader import get_template
+from django.contrib.auth.models import User
+from django.utils import timezone
+
+
 from xhtml2pdf import pisa
 from io import BytesIO
 from . import models
-from django.utils import timezone
 
 def render_to_pdf(template_src, context_dict={}):
     template = get_template(template_src)
@@ -15,7 +18,7 @@ def render_to_pdf(template_src, context_dict={}):
     return None
 
 class InvoiceContext:
-    def __init__(self, companyID, product, productAmount, employee):
+    def __init__(self, company, product, productAmount, userID):
         baseFEE = 500.0
         liquidTAX = ((productAmount * product.get('price') + baseFEE)  * product.get('tax'))
         totalPRODUCT = (product.get('price') * productAmount)
@@ -26,16 +29,26 @@ class InvoiceContext:
 
         self.product = product
         self.productAmount = productAmount
-        self.costumer = self.getCompany(companyID)
+        self.costumer = company
         self.total = totalPRODUCT + liquidTAX + baseFEE
         self.issueDate = timezone.now()
         self.costumerCELLPHONE = f"{self.costumer.cellphone[0:3]}-{self.costumer.cellphone[3:6]}-{self.costumer.cellphone[6:]}"
-        self.employee = employee
-        self.orderID = models.Order.objects.latest('id').id + 1
+        self.employee = self.getEmployeeUsername(userID)
+        self.orderID = self.getLatestOrder()
 
-    def getCompany(self, companyID):
-        try: 
-            company = models.Company.objects.get(id=companyID)
-            return company
-        except models.Company.DoesNotExist:
-            return 'error'
+    @classmethod
+    def getLatestOrder(cls):
+        try:
+            return models.Order.objects.latest('id').id + 1
+        except Exception:
+            return 0
+
+    @classmethod
+    def getEmployeeUsername(cls, userID):
+        try:
+            print(userID)
+            user = User.objects.get(id=userID)
+            return user.username
+        except Exception as err:
+            print(err)
+            raise Exception(f"Failed to get user: {str(err)}")
